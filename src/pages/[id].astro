@@ -1,0 +1,39 @@
+---
+import type { GetStaticPaths } from "astro";
+import End from "@components/End.astro";
+import Game from "@components/Game.astro";
+import Restart from "@components/Restart.astro";
+import GameLayout from "@layouts/Layout.astro";
+
+// Statoc Paths
+export const getStaticPaths = (() => {
+  return [
+    {
+      params: { id: "cpu" },
+      props: { mode: "cpu" },
+    },
+    {
+      params: { id: "vs" },
+      props: { mode: "vs" },
+    },
+  ];
+}) satisfies GetStaticPaths;
+
+// Page Props
+interface Props {
+  mode: "vs" | "cpu";
+}
+
+const { mode } = Astro.props;
+---
+
+<GameLayout title={`Minigames | Tic Tac Toe | ${mode.toUpperCase()}`}>
+  <Game />
+  <End />
+  <Restart />
+</GameLayout>
+
+<script>
+  import { handleGame } from "@assets/js/game";
+  handleGame();
+</script>

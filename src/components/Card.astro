@@ -1,0 +1,62 @@
+---
+import { twMerge } from "tailwind-merge";
+
+const { class: className, ...attrs } = Astro.props;
+---
+
+<div
+  {...attrs}
+  class={twMerge(
+    "card-shadow cursor-pointer after:-bottom-[8px] rounded-xl h-full w-full bg-muted-background flex items-center justify-center gap-2 transition-colors",
+    className
+  )}
+>
+  <slot />
+</div>
+
+<style>
+  .game-tile.highlight-x {
+    background-color: var(--color-accent-1);
+    animation: highlight-expand 0.4s ease-in-out;
+  }
+
+  .game-tile.highlight-o {
+    background-color: var(--color-accent-2);
+    animation: highlight-expand 0.4s ease-in-out;
+  }
+
+  .game-tile.highlight-x::after {
+    display: none;
+  }
+
+  .game-tile.highlight-o::after {
+    display: none;
+  }
+
+  @keyframes highlight-expand {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1); /* Puedes ajustar el valor según lo que quieras */
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .card-shadow {
+    position: relative;
+  }
+
+  .card-shadow::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.25);
+    border-radius: 0.75rem;
+    width: 100%;
+    z-index: -1;
+  }
+</style>
