@@ -19,7 +19,6 @@ const SITE_DESCRIPTION =
     <meta name="viewport" content="width=device-width" />
 
     <title>{title || SITE_TITLE}</title>
-
     <meta name="description" content={SITE_DESCRIPTION} />
 
     <!-- OpenGraph -->
@@ -32,8 +31,11 @@ const SITE_DESCRIPTION =
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta property="twitter:domain" content="tateti.mourglia.dev" />
+    <meta property="twitter:url" content="https://tateti.mourglia.dev" />
     <meta name="twitter:title" content={SITE_TITLE} />
     <meta name="twitter:description" content={SITE_DESCRIPTION} />
+    <meta name="twitter:image" content="https://tateti.mourglia.dev/og.jpg" />
 
     <!-- Links -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
