@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #1a2a33;
+  --color-muted-background: #1f3641;
+  --color-foreground: #dbe8ed;
+  --color-muted-foreground: #a8bfc9;
+  --color-accent-1: #31c3db;
+  --color-accent-1-light: #65e9e4;
+  --color-accent-2: #f2b137;
+  --color-accent-2-light: #ffc860;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+/* === FONT === */
+@font-face {
+  font-family: "Outfit";
+  src: url("/font/Outfit-Regular.ttf");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Outfit";
+  src: url("/font/Outfit-Medium.ttf");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Outfit";
+  src: url("/font/Outfit-Bold.ttf");
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* === ANIMATIONS === */
+@keyframes highlighted {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-highlighted {
+  animation: highlighted 0.4s ease;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-pop {
+  animation: pop 0.4s ease-out;
+}
+
+@keyframes opacity {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-opacity {
+  animation: opacity 0.2s ease;
+}
+
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-3px);
+  }
+  40% {
+    transform: translateX(3px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.2s ease-in-out;
+}
+
+/* === GENERAL === */
+html,
+body,
+#app {
+  height: 100%;
+  font-family: "Outfit", sans-serif;
+}
