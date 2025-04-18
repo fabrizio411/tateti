@@ -32,15 +32,18 @@ const Game = () => {
   const [turn, setTurn] = createSignal<Mark>("x");
   const [turnCount, setTurnCount] = createSignal<number>(0);
   const [paused, setPaused] = createSignal<boolean>(false);
+  const [bloqued, setBloqued] = createSignal<boolean>(false);
   const [pieces, setPieces] = createSignal<Pieces>(Array(9).fill("0"));
   const [winners, setWinners] = createSignal<number[]>([]);
   const [scoreX, setScoreX] = createSignal<number>(0);
   const [scoreO, setScoreO] = createSignal<number>(0);
   const [ties, setTies] = createSignal<number>(0);
 
+  const isCpuTurn = () => mode === "cpu" && turn() !== mark;
+
   // === HANDLERS === //
   const onPlay = (index: number) => {
-    if (paused() || pieces()[index] !== "0") return;
+    if (paused() || pieces()[index] !== "0" || bloqued()) return;
 
     placePiece(index);
 
@@ -51,11 +54,7 @@ const Game = () => {
 
     setTurn((prev) => prev === "x" ? "o" : "x");
 
-    if (mode === "cpu" && turn() !== mark) {
-      setTimeout(() => {
-        onPlay(cpuChoice(mark as Mark, pieces()));
-      }, 500);
-    }
+    playCpu();
   };
 
   const onWin = (result: number[]) => {
@@ -90,6 +89,23 @@ const Game = () => {
   };
 
   // === UTILS === //
+  const playCpu = () => {
+    if (isCpuTurn()) {
+      setBloqued(true);
+      setTimeout(() => {
+        placePiece(cpuChoice(mark as Mark, pieces()));
+
+        const result = checkWin(turn(), pieces());
+        if (result !== null) return onWin(result);
+        if (turnCount() >= 8) return onTie();
+        setTurnCount((prev) => prev + 1);
+
+        setTurn((prev) => prev === "x" ? "o" : "x");
+        setBloqued(false);
+      }, 500);
+    }
+  };
+
   const placePiece = (index: number) => {
     setPieces((prev) => {
       const newPieces = [...prev];
