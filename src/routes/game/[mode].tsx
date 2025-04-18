@@ -13,6 +13,7 @@ import { createSignal } from "solid-js";
 import { checkWin } from "~/libs/checkWin";
 import Popup from "~/components/ui/Popup";
 import EndGameModal from "~/components/modals/EndGameModal";
+import { cpuChoice } from "~/libs/cpuChoice";
 
 const Game = () => {
   // === VALIDATIONS === //
@@ -38,7 +39,7 @@ const Game = () => {
   const [ties, setTies] = createSignal<number>(0);
 
   // === HANDLERS === //
-  const onPlay = (index: number, e: Event) => {
+  const onPlay = (index: number) => {
     if (paused() || pieces()[index] !== "0") return;
 
     placePiece(index);
@@ -49,6 +50,12 @@ const Game = () => {
     setTurnCount((prev) => prev + 1);
 
     setTurn((prev) => prev === "x" ? "o" : "x");
+
+    if (mode === "cpu" && turn() !== mark) {
+      setTimeout(() => {
+        onPlay(cpuChoice(mark as Mark, pieces()));
+      }, 500);
+    }
   };
 
   const onWin = (result: number[]) => {
