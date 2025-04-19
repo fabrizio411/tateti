@@ -11,6 +11,7 @@ import { twMerge } from "tailwind-merge";
 interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
   content: "0" | Mark;
   turn: Mark;
+  hideHover: boolean;
   highlighted: boolean;
 }
 
@@ -32,7 +33,10 @@ const Tile: Component<Props> = (props) => {
         when={props.content !== "0"}
         fallback={
           <Icon
-            class="hidden group-hover:block size-[60%]"
+            class={twMerge(
+              "hidden group-hover:block size-[60%]",
+              props.hideHover && "group-hover:hidden",
+            )}
             icon={props.turn === "x" ? XIconOutline : OIconOutline}
           />
         }

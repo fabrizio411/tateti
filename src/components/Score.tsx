@@ -10,12 +10,14 @@ interface Props {
 }
 
 const Score: Component<Props> = (props) => {
-  const xLabel = props.mode === "cpu"
-    ? (props.mark === "x" ? "YOU" : "CPU")
+  let otherLabel = props.mode === "cpu" ? "CPU" : "SOMEONE";
+
+  let xLabel = props.mode !== "local"
+    ? (props.mark === "x" ? "YOU" : otherLabel)
     : (props.mark === "x" ? "Player 1" : "Player 2");
 
-  const oLabel = props.mode === "cpu"
-    ? (props.mark === "o" ? "YOU" : "CPU")
+  let oLabel = props.mode !== "local"
+    ? (props.mark === "o" ? "YOU" : otherLabel)
     : (props.mark === "o" ? "Player 1" : "Player 2");
 
   return (

@@ -7,6 +7,7 @@ interface Props {
   turn: Mark;
   onPlay: (index: number, e: Event) => void;
   winners: number[];
+  hideHover: boolean;
 }
 
 const Board: Component<Props> = (props) => {
@@ -19,6 +20,7 @@ const Board: Component<Props> = (props) => {
             onclick={[props.onPlay, index]}
             turn={props.turn}
             content={item()}
+            hideHover={props.hideHover}
           />
         )}
       </Index>

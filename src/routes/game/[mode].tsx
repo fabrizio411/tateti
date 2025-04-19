@@ -1,14 +1,16 @@
-import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
+import { A, useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import { Mark, Mode, Pieces } from "~/global";
 import NotFound from "../[...404]";
 import Board from "~/components/Board";
 import Score from "~/components/Score";
 import Menu from "~/components/Menu";
-import { createSignal, onCleanup, onMount } from "solid-js";
+import { createSignal, onCleanup, onMount, Show } from "solid-js";
 import { checkWin } from "~/libs/checkWin";
 import Popup from "~/components/ui/Popup";
 import EndGameModal from "~/components/modals/EndGameModal";
 import { cpuChoice } from "~/libs/cpuChoice";
+import Button from "~/components/ui/Button";
+import { getRequestEvent } from "solid-js/web";
 
 const Game = () => {
   // === VALIDATIONS === //
@@ -22,13 +24,24 @@ const Game = () => {
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const mark = searchParams.mark;
-  if (mark !== "x" && mark !== "o") navigate("/", { replace: true });
-  const roomId = searchParams.roomId;
+  const [mark, setMark] = createSignal<Mark>();
+  if (!isOnline && searchParams.mark !== "x" && searchParams.mark !== "o") {
+    navigate("/", { replace: true });
+  } else {
+    setMark(searchParams.mark as Mark);
+  }
 
-  // TOOD validar roomid
+  const event = getRequestEvent();
+  const roomId = searchParams.roomId;
+  const playerId =
+    typeof window !== "undefined" && window.localStorage.getItem("playerId") ||
+    crypto.randomUUID();
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem("playerId", playerId);
+  }
 
   // === GAME STATES === //
+  const [roomFull, setRoomFull] = createSignal<boolean>(false);
   const [turn, setTurn] = createSignal<Mark>("x");
   const [turnCount, setTurnCount] = createSignal<number>(0);
   const [roundCount, setRoundCount] = createSignal<number>(1);
@@ -39,7 +52,7 @@ const Game = () => {
   const [scoreX, setScoreX] = createSignal<number>(0);
   const [scoreO, setScoreO] = createSignal<number>(0);
   const [ties, setTies] = createSignal<number>(0);
-  const isCpuTurn = () => isCpu && turn() !== mark;
+  const isCpuTurn = () => isCpu && turn() !== mark();
   let interval: any;
 
   // === API === //
@@ -62,7 +75,7 @@ const Game = () => {
     if (!roomId) return;
     const res = await fetch(`/api/rooms/${roomId}/move`, {
       method: "POST",
-      body: JSON.stringify({ index, player: mark }),
+      body: JSON.stringify({ index, player: mark() }),
       headers: { "Content-Type": "application/json" },
     });
     if (res.ok) {
@@ -78,11 +91,19 @@ const Game = () => {
   };
 
   // === EFFECTS === //
-  onMount(() => {
+  onMount(async () => {
     if (mode === "online" && roomId) {
-      fetch(`/api/rooms/${roomId}`, { method: "POST" }); // crear si no existe
+      const res = await fetch(`/api/rooms/${roomId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId }),
+      });
+      if (res.status === 403) return setRoomFull(true);
+      const data = await res.json();
+      setMark(data.playerRoles[playerId]);
+      console.log(mark());
       fetchState();
-      interval = setInterval(fetchState, 1000); // sync loop
+      interval = setInterval(fetchState, 1000);
     }
   });
 
@@ -150,7 +171,7 @@ const Game = () => {
     if (isCpuTurn()) {
       setBloqued(true);
       setTimeout(() => {
-        placePiece(cpuChoice(mark as Mark, pieces()));
+        placePiece(cpuChoice(mark() as Mark, pieces()));
 
         const result = checkWin(turn(), pieces());
         if (result !== null) return onWin(result);
@@ -174,39 +195,52 @@ const Game = () => {
   playCpu();
 
   return (
-    <div class="w-full p-4 max-w-[460px] flex flex-col items-stretch gap-6 sm:gap-7">
-      <Menu onRestart={onRestart} turn={turn()} />
-      <Board
-        winners={winners()}
-        onPlay={onPlay}
-        turn={turn()}
-        pieces={pieces()}
-      />
-      <Score
-        mode={mode as Mode}
-        mark={mark as Mark}
-        scoreO={scoreO()}
-        scoreX={scoreX()}
-        ties={ties()}
-      />
+    <Show
+      when={!roomFull()}
+      fallback={
+        <div class="flex flex-col items-center gap-8 bg-black/20 py-16 w-full">
+          <h3 class="text-5xl font-bold">THIS ROOM IS FULL!</h3>
+          <A href="/">
+            <Button variant="primary">BACK TO HOME</Button>
+          </A>
+        </div>
+      }
+    >
+      <div class="w-full p-4 max-w-[460px] flex flex-col items-stretch gap-6 sm:gap-7">
+        <Menu onRestart={onRestart} turn={turn()} />
+        <Board
+          winners={winners()}
+          onPlay={onPlay}
+          turn={turn()}
+          pieces={pieces()}
+          hideHover={isOnline && turn() !== mark()}
+        />
+        <Score
+          mode={mode as Mode}
+          mark={mark() as Mark}
+          scoreO={scoreO()}
+          scoreX={scoreX()}
+          ties={ties()}
+        />
 
-      <Popup
-        class="w-full"
-        open={paused()}
-        onClose={() => {}}
-        modal={
-          <EndGameModal
-            mode={mode as Mode}
-            mark={mark as Mark}
-            winner={winners().length > 0 ? turn() : null}
-            onClose={() => {
-              setPaused(false);
-              onNext();
-            }}
-          />
-        }
-      />
-    </div>
+        <Popup
+          class="w-full"
+          open={paused()}
+          onClose={() => {}}
+          modal={
+            <EndGameModal
+              mode={mode as Mode}
+              mark={mark() as Mark}
+              winner={winners().length > 0 ? turn() : null}
+              onClose={() => {
+                setPaused(false);
+                onNext();
+              }}
+            />
+          }
+        />
+      </div>
+    </Show>
   );
 };
 
