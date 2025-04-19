@@ -1,13 +1,13 @@
-import SelectorButton from "~/components/ui/SelectorButton";
-import ShadowCard from "~/components/ui/ShadowCard";
 import Logo from "~/assets/logo.svg";
 import OIcon from "~/assets/icon-o.svg";
 import XIcon from "~/assets/icon-x.svg";
 import { Mark } from "~/global";
 import { createSignal } from "solid-js";
-import Button from "~/components/ui/Button";
-import Icon from "~/components/ui/Icon";
 import { A } from "@solidjs/router";
+import ShadowCard from "~/components/ui/ShadowCard";
+import SelectorButton from "~/components/ui/SelectorButton";
+import Icon from "~/components/ui/Icon";
+import Button from "~/components/ui/Button";
 
 export default function Home() {
   const [mark, setMark] = createSignal<Mark>("x");

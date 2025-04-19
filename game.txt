@@ -1,10 +1,15 @@
-import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
+import {
+  redirect,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "@solidjs/router";
 import { Mark, Mode, Pieces } from "~/global";
 import NotFound from "../[...404]";
 import Board from "~/components/Board";
 import Score from "~/components/Score";
 import Menu from "~/components/Menu";
-import { createSignal } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
 import { checkWin } from "~/libs/checkWin";
 import Popup from "~/components/ui/Popup";
 import EndGameModal from "~/components/modals/EndGameModal";
@@ -22,11 +27,14 @@ const Game = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const mark = searchParams.mark;
   if (mark !== "x" && mark !== "o") navigate("/", { replace: true });
+  const room = Array.isArray(searchParams.room)
+    ? searchParams.room[0]
+    : searchParams.room ?? "";
 
   // === GAME STATES === //
+  const [socket, setSocket] = createSignal<WebSocket | null>(null);
   const [turn, setTurn] = createSignal<Mark>("x");
   const [turnCount, setTurnCount] = createSignal<number>(0);
-  const [roundCount, setRoundCount] = createSignal<number>(1);
   const [paused, setPaused] = createSignal<boolean>(false);
   const [bloqued, setBloqued] = createSignal<boolean>(false);
   const [pieces, setPieces] = createSignal<Pieces>(Array(9).fill("0"));
@@ -35,11 +43,9 @@ const Game = () => {
   const [scoreO, setScoreO] = createSignal<number>(0);
   const [ties, setTies] = createSignal<number>(0);
 
-  const isCpuTurn = () => mode === "cpu" && turn() !== mark;
-
   // === HANDLERS === //
   const onPlay = (index: number) => {
-    if (paused() || pieces()[index] !== "0" || bloqued() || isCpuTurn()) return;
+    if (paused() || pieces()[index] !== "0" || bloqued()) return;
 
     placePiece(index);
 
@@ -47,10 +53,14 @@ const Game = () => {
     if (result !== null) return onWin(result);
     if (turnCount() >= 8) return onTie();
     setTurnCount((prev) => prev + 1);
-
     setTurn((prev) => prev === "x" ? "o" : "x");
 
-    playCpu();
+    // if (mode === "online") {
+    //   socket()?.send(JSON.stringify({ type: "play", payload: { index } }));
+    // } else
+    if (mode === "cpu") {
+      playCpu();
+    }
   };
 
   const onWin = (result: number[]) => {
@@ -70,27 +80,49 @@ const Game = () => {
   };
 
   const onNext = () => {
-    setRoundCount((prev) => prev + 1);
     setPieces(Array(9).fill("0"));
     setWinners([]);
-    setTurn(roundCount() % 2 === 0 ? "o" : "x");
+    setTurn((prev) => prev === "x" ? "o" : "x");
     setTurnCount(0);
-    setBloqued(false);
-    playCpu();
   };
 
   const onRestart = () => {
+    onNext();
     setTurn("x");
     setScoreO(0);
     setScoreX(0);
     setTies(0);
-    onNext();
-    setRoundCount(1);
   };
+
+  // // === ONLINE HANDLERS === //
+  // onMount(() => {
+  //   if (mode !== "online" || !room) return;
+
+  //   const ws = new WebSocket(`ws://${location.host}/api/socket?roomId=${room}`);
+  //   setSocket(ws); // guardamos el socket en el signal
+
+  //   ws.onopen = () => {
+  //     console.log("Conectado al WebSocket");
+  //   };
+
+  //   ws.onmessage = (event) => {
+  //     const { type, payload } = JSON.parse(event.data);
+
+  //     if (type === "play") {
+  //       placePiece(payload.index);
+  //       setTurnCount((prev) => prev + 1);
+  //       setTurn((prev) => (prev === "x" ? "o" : "x"));
+  //     }
+  //   };
+
+  //   onCleanup(() => {
+  //     ws.close();
+  //   });
+  // });
 
   // === UTILS === //
   const playCpu = () => {
-    if (isCpuTurn()) {
+    if (turn() !== mark) {
       setBloqued(true);
       setTimeout(() => {
         placePiece(cpuChoice(mark as Mark, pieces()));
@@ -99,8 +131,8 @@ const Game = () => {
         if (result !== null) return onWin(result);
         if (turnCount() >= 8) return onTie();
         setTurnCount((prev) => prev + 1);
-        setTurn((prev) => prev === "x" ? "o" : "x");
 
+        setTurn((prev) => prev === "x" ? "o" : "x");
         setBloqued(false);
       }, 500);
     }
@@ -113,8 +145,6 @@ const Game = () => {
       return newPieces;
     });
   };
-
-  playCpu();
 
   return (
     <div class="w-full p-4 max-w-[460px] flex flex-col items-stretch gap-6 sm:gap-7">
