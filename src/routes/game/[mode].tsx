@@ -4,7 +4,7 @@ import NotFound from "../[...404]";
 import Board from "~/components/Board";
 import Score from "~/components/Score";
 import Menu from "~/components/Menu";
-import { createSignal } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
 import { checkWin } from "~/libs/checkWin";
 import Popup from "~/components/ui/Popup";
 import EndGameModal from "~/components/modals/EndGameModal";
@@ -17,11 +17,16 @@ const Game = () => {
   const mode = params.mode;
   const valid = modes.includes(mode as Mode);
   if (!valid) return <NotFound />;
+  const isOnline = mode === "online";
+  const isCpu = mode === "cpu";
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const mark = searchParams.mark;
   if (mark !== "x" && mark !== "o") navigate("/", { replace: true });
+  const roomId = searchParams.roomId;
+
+  // TOOD validar roomid
 
   // === GAME STATES === //
   const [turn, setTurn] = createSignal<Mark>("x");
@@ -34,23 +39,70 @@ const Game = () => {
   const [scoreX, setScoreX] = createSignal<number>(0);
   const [scoreO, setScoreO] = createSignal<number>(0);
   const [ties, setTies] = createSignal<number>(0);
+  const isCpuTurn = () => isCpu && turn() !== mark;
+  let interval: any;
 
-  const isCpuTurn = () => mode === "cpu" && turn() !== mark;
+  // === API === //
+  const fetchState = async () => {
+    if (!roomId) return;
+    const res = await fetch(`/api/rooms/${roomId}`);
+    if (res.ok) {
+      const data = await res.json();
+      setPieces(data.pieces);
+      setTurn(data.turn);
+      setPaused(data.paused);
+      setWinners(data.winners || []);
+      setScoreX(data.score.x);
+      setScoreO(data.score.o);
+      setTies(data.score.ties);
+    }
+  };
+
+  const sendMove = async (index: number) => {
+    if (!roomId) return;
+    const res = await fetch(`/api/rooms/move/${roomId}`, {
+      method: "POST",
+      body: JSON.stringify({ index, player: mark }),
+      headers: { "Content-Type": "application/json" },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setPieces(data.pieces);
+      setTurn(data.turn);
+      setPaused(data.paused);
+      setWinners(data.winners || []);
+      setScoreX(data.score.x);
+      setScoreO(data.score.o);
+      setTies(data.score.ties);
+    }
+  };
+
+  // === EFFECTS === //
+  onMount(() => {
+    if (mode === "online" && roomId) {
+      fetch(`/api/rooms/${roomId}`, { method: "POST" }); // crear si no existe
+      fetchState();
+      interval = setInterval(fetchState, 1000); // sync loop
+    }
+  });
+
+  onCleanup(() => clearInterval(interval));
 
   // === HANDLERS === //
-  const onPlay = (index: number) => {
+  const onPlay = async (index: number) => {
     if (paused() || pieces()[index] !== "0" || bloqued() || isCpuTurn()) return;
 
-    placePiece(index);
-
-    const result = checkWin(turn(), pieces());
-    if (result !== null) return onWin(result);
-    if (turnCount() >= 8) return onTie();
-    setTurnCount((prev) => prev + 1);
-
-    setTurn((prev) => prev === "x" ? "o" : "x");
-
-    playCpu();
+    if (isOnline) {
+      sendMove(index);
+    } else {
+      placePiece(index);
+      const result = checkWin(turn(), pieces());
+      if (result !== null) return onWin(result);
+      if (turnCount() >= 8) return onTie();
+      setTurnCount((prev) => prev + 1);
+      setTurn((prev) => (prev === "x" ? "o" : "x"));
+      playCpu();
+    }
   };
 
   const onWin = (result: number[]) => {
@@ -70,6 +122,10 @@ const Game = () => {
   };
 
   const onNext = () => {
+    if (isOnline) {
+      location.reload();
+    }
+
     setRoundCount((prev) => prev + 1);
     setPieces(Array(9).fill("0"));
     setWinners([]);

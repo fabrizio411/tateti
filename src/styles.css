@@ -11,6 +11,12 @@
   --color-accent-2-light: #ffc860;
 }
 
+html,
+body,
+#app {
+  height: 100%;
+}
+
 /* === FONT === */
 @font-face {
   font-family: "Outfit";

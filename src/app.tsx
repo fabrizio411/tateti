@@ -1,12 +1,12 @@
+import { Meta, MetaProvider, Title } from "@solidjs/meta";
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
 import { Suspense } from "solid-js";
-import { Meta, MetaProvider, Title } from "@solidjs/meta";
 import "./styles.css";
 
 export default function App() {
-  const SITE_TITLE = "Tateti";
-  const SITE_DESCRIPTION = "Juega online, local o contra la computadora.";
+  const SITE_TITLE = "";
+  const SITE_DESCRIPTION = "";
 
   return (
     <Router
