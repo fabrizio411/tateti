@@ -60,7 +60,7 @@ const Game = () => {
 
   const sendMove = async (index: number) => {
     if (!roomId) return;
-    const res = await fetch(`/api/rooms/move/${roomId}`, {
+    const res = await fetch(`/api/rooms/${roomId}/move`, {
       method: "POST",
       body: JSON.stringify({ index, player: mark }),
       headers: { "Content-Type": "application/json" },
@@ -121,11 +121,12 @@ const Game = () => {
     setTies((prev) => prev + 1);
   };
 
-  const onNext = () => {
+  const onNext = async () => {
     if (isOnline) {
-      location.reload();
+      return await fetch(`/api/rooms/${roomId}/next`, {
+        method: "POST",
+      });
     }
-
     setRoundCount((prev) => prev + 1);
     setPieces(Array(9).fill("0"));
     setWinners([]);
