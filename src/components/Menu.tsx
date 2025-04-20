@@ -11,6 +11,8 @@ import Restart from "./Restart";
 interface Props extends JSX.HTMLAttributes<HTMLDivElement> {
   turn: Mark;
   onRestart: () => void;
+  isOnline: boolean;
+  roomId: string;
 }
 
 const Menu: Component<Props> = (props) => {
@@ -33,7 +35,14 @@ const Menu: Component<Props> = (props) => {
         />
       </ShadowCard>
 
-      <Restart onRestart={props.onRestart} />
+      <Show
+        when={!props.isOnline}
+        fallback={
+          <p class="font-bold text-2xl justify-self-end">#{props.roomId}</p>
+        }
+      >
+        <Restart onRestart={props.onRestart} />
+      </Show>
     </div>
   );
 };

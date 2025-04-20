@@ -8,6 +8,7 @@ import { createSignal } from "solid-js";
 import Button from "~/components/ui/Button";
 import Icon from "~/components/ui/Icon";
 import { A } from "@solidjs/router";
+import OnlineSelector from "~/components/OnlineSelector";
 
 export default function Home() {
   const [mark, setMark] = createSignal<Mark>("x");
@@ -43,6 +44,7 @@ export default function Home() {
       </ShadowCard>
 
       <div class="flex flex-col gap-6 w-full">
+        <OnlineSelector />
         <A href={`/game/cpu?mark=${mark()}`}>
           <Button variant="primary" class="w-full">
             <h3 class="text-lg">

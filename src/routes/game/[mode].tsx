@@ -10,7 +10,6 @@ import Popup from "~/components/ui/Popup";
 import EndGameModal from "~/components/modals/EndGameModal";
 import { cpuChoice } from "~/libs/cpuChoice";
 import Button from "~/components/ui/Button";
-import { getRequestEvent } from "solid-js/web";
 
 const Game = () => {
   // === VALIDATIONS === //
@@ -31,7 +30,6 @@ const Game = () => {
     setMark(searchParams.mark as Mark);
   }
 
-  const event = getRequestEvent();
   const roomId = searchParams.roomId;
   const playerId =
     typeof window !== "undefined" && window.localStorage.getItem("playerId") ||
@@ -207,7 +205,12 @@ const Game = () => {
       }
     >
       <div class="w-full p-4 max-w-[460px] flex flex-col items-stretch gap-6 sm:gap-7">
-        <Menu onRestart={onRestart} turn={turn()} />
+        <Menu
+          roomId={roomId as string}
+          isOnline={isOnline}
+          onRestart={onRestart}
+          turn={turn()}
+        />
         <Board
           winners={winners()}
           onPlay={onPlay}

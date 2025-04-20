@@ -19,8 +19,6 @@ export async function POST({ params, request }: APIEvent) {
     const roomId = params.roomId!;
     const { playerId } = await request.json();
 
-    console.log(roomId, playerId);
-
     if (!playerId) {
         return new Response("Missing playerId", { status: 400 });
     }
